@@ -1,8 +1,11 @@
 package com.example.instaviewer
 
+import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.view.View
 import android.webkit.CookieManager
+import android.webkit.WebResourceRequest
 import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
@@ -99,7 +102,46 @@ class MainActivity : AppCompatActivity() {
             userAgentString = "Mozilla/5.0 (Linux; Android 13) AppleWebKit/537.36 " +
                     "(KHTML, like Gecko) Chrome/120.0 Mobile Safari/537.36"
         }
-        webView.webViewClient = WebViewClient()
+
+        webView.webViewClient = object : WebViewClient() {
+            override fun shouldOverrideUrlLoading(
+                view: WebView,
+                request: WebResourceRequest
+            ): Boolean {
+                val url = request.url.toString()
+
+                if (url.startsWith("http://") || url.startsWith("https://")) {
+                    return false
+                }
+
+                try {
+                    val intent = if (url.startsWith("intent://")) {
+                        Intent.parseUri(url, Intent.URI_INTENT_SCHEME)
+                    } else {
+                        Intent(Intent.ACTION_VIEW, Uri.parse(url))
+                    }
+
+                    val packageManager = view.context.packageManager
+                    if (intent.resolveActivity(packageManager) != null) {
+                        view.context.startActivity(intent)
+                    } else {
+                        Toast.makeText(
+                            view.context,
+                            "Приложение для этой ссылки не установлено",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                } catch (e: Exception) {
+                    Toast.makeText(
+                        view.context,
+                        "Не удалось обработать ссылку",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+
+                return true
+            }
+        }
     }
 
     private fun openProfile() {
