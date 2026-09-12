@@ -125,11 +125,16 @@ class MainActivity : AppCompatActivity() {
                     if (intent.resolveActivity(packageManager) != null) {
                         view.context.startActivity(intent)
                     } else {
-                        Toast.makeText(
-                            view.context,
-                            "Приложение для этой ссылки не установлено",
-                            Toast.LENGTH_SHORT
-                        ).show()
+                        val fallbackUrl = intent.getStringExtra("browser_fallback_url")
+                        if (fallbackUrl != null) {
+                            view.loadUrl(fallbackUrl)
+                        } else {
+                            Toast.makeText(
+                                view.context,
+                                "Не удалось открыть ссылку",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
                     }
                 } catch (e: Exception) {
                     Toast.makeText(
